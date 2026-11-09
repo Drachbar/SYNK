@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>se.findersson</groupId>
+        <artifactId>synk-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <artifactId>synk-frontend</artifactId>
+    <packaging>pom</packaging>
+    <name>synk-frontend</name>
+    <description>SYNK frontend (Svelte)</description>
+
+    <!--
+        Placeholder until the Svelte app is set up. Then add frontend-maven-plugin
+        (com.github.eirslett) to install Node and run `npm ci` / `npm run build`,
+        and package the build output so the backend can serve it as static resources.
+    -->
+
+</project>
