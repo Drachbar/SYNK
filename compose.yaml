@@ -1,0 +1,19 @@
+services:
+  db:
+    image: docker.io/library/postgres:18-alpine
+    environment:
+      POSTGRES_USER: synk
+      POSTGRES_PASSWORD: synk
+      POSTGRES_DB: synk
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-h", "localhost", "-U", "synk", "-d", "synk" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  db_data:
