@@ -1,0 +1,1 @@
+SYNK - Summering, Yrkanden/Yttranden, Nästa vecka, Käk.
