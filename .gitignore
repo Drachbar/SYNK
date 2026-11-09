@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Frontend (Node installed by frontend-maven-plugin) ###
+/frontend/node/

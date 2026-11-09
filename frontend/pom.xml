@@ -8,14 +8,65 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>synk-frontend</artifactId>
-    <packaging>pom</packaging>
     <name>synk-frontend</name>
-    <description>SYNK frontend (Svelte)</description>
+    <description>SYNK frontend (SvelteKit SPA), packaged as a jar with the build output under /static</description>
 
-    <!--
-        Placeholder until the Svelte app is set up. Then add frontend-maven-plugin
-        (com.github.eirslett) to install Node and run `npm ci` / `npm run build`,
-        and package the build output so the backend can serve it as static resources.
-    -->
+    <properties>
+        <frontend-maven-plugin.version>2.0.2</frontend-maven-plugin.version>
+        <node.version>v24.17.0</node.version>
+        <npm.version>12.2.2</npm.version>
+    </properties>
+
+    <build>
+        <!-- Spring Boot serves classpath:/static/ as static content -->
+        <resources>
+            <resource>
+                <directory>build</directory>
+                <targetPath>static</targetPath>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${frontend-maven-plugin.version}</version>
+                <configuration>
+                    <nodeVersion>${node.version}</nodeVersion>
+                    <npmVersion>${npm.version}</npmVersion>
+                    <!-- Node/npm are installed locally into frontend/node -->
+                    <installDirectory>node</installDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-node-and-npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>npm-ci</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>ci</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-build</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <!-- Before process-resources, so build/ exists when resources are copied -->
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
