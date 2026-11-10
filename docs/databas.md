@@ -39,10 +39,17 @@ En person som kan logga in.
 | Kolumn          | Typ          | Betydelse                                     |
 |-----------------|--------------|-----------------------------------------------|
 | `id`            | uuid         | Primärnyckel, genereras av databasen.         |
-| `name`          | varchar(255) | Användarens namn.                             |
+| `name`          | varchar(255) | Användarens namn. Används som användarnamn vid inloggning och är unikt (`uq_app_user_name`). |
 | `password_hash` | varchar(255) | BCrypt-hash av lösenordet, aldrig klartext.   |
 | `created_at`    | timestamptz  | När raden skapades.                           |
 | `updated_at`    | timestamptz  | När raden senast ändrades.                    |
+
+## `spring_session` och `spring_session_attributes`
+
+Inloggningssessionerna, se [inloggning.md](inloggning.md). Tabellerna ägs av Spring Session:
+strukturen är kopierad från bibliotekets eget schema och ska inte ändras eller läsas av
+applikationskoden. De har ingen främmande nyckel till `app_user`; kopplingen till användaren
+är namnet i `spring_session.principal_name`.
 
 ## `entry`
 
