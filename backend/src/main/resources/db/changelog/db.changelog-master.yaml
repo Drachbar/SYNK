@@ -39,3 +39,81 @@ databaseChangeLog:
                   defaultValueComputed: now()
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: 002
+      author: Mattias Andersson
+      changes:
+        - createTable:
+            tableName: entry
+            remarks: Veckoanteckning - en rad per person och vecka
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: author_id
+                  type: UUID
+                  remarks: Användaren som skrivit anteckningen
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_entry_author
+                    references: app_user(id)
+
+              - column:
+                  name: iso_year
+                  type: INT
+                  remarks: ISO 8601-veckoår (kan skilja sig från kalenderåret runt nyår)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: iso_week
+                  type: INT
+                  remarks: ISO 8601-veckonummer, 1-53
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: schema_version
+                  type: INT
+                  remarks: Version av formatet i content
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: content
+                  type: JSONB
+                  remarks: Formulärsvaren, nycklade på stabila fält-id:n
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            tableName: entry
+            columnNames: author_id, iso_year, iso_week
+            constraintName: uq_entry_author_week
+
+        - sql:
+            sql: ALTER TABLE entry ADD CONSTRAINT ck_entry_iso_week CHECK (iso_week BETWEEN 1 AND 53)
+      rollback:
+        - dropTable:
+            tableName: entry
