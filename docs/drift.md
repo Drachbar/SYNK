@@ -91,8 +91,21 @@ Kontrollera efteråt: `curl -sI https://<domän>/api/auth/me` ska ge `401` och e
 
 ### 4. Användare
 
-Det finns ingen registrering. Lägg in användarna direkt i databasen med en BCrypt-hash,
-efter att appen har startat en gång (så att tabellerna finns). På databas-VM:en:
+Det finns ingen registrering. Användare läggs in direkt i databasen med en BCrypt-hash,
+efter att appen har startat en gång (så att tabellerna finns).
+
+Enklast är skriptet [`scripts/create-user.sh`](../scripts/create-user.sh). Det frågar efter
+databasens adress, användare och lösenord, och sedan efter användarnamn och lösenord i SYNK.
+Finns användaren redan byts lösenordet. Det kräver `psql` (`sudo apt install postgresql-client`)
+och ska köras från en maskin som får ansluta till databasen enligt `pg_hba.conf`, t.ex.
+app-VM:en:
+
+```sh
+scp scripts/create-user.sh app-vm:
+ssh -t app-vm ./create-user.sh
+```
+
+Eller för hand på databas-VM:en:
 
 ```sh
 sudo -u postgres psql -n synk
