@@ -56,8 +56,8 @@ class EntryTests {
     }
 
     @Test
-    void weekWithoutNoteIsNotFound() throws Exception {
-        mvc.perform(get("/api/entries/2900/47").with(user(anna))).andExpect(status().isNotFound());
+    void weekWithoutNoteIsNoContent() throws Exception {
+        mvc.perform(get("/api/entries/2900/47").with(user(anna))).andExpect(status().isNoContent());
     }
 
     @Test

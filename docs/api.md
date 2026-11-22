@@ -10,7 +10,7 @@ Det finns en gemensam anteckning per ISO-vecka (se [databas.md](databas.md#entry
 | Anrop                               | Svar                                                           |
 |-------------------------------------|----------------------------------------------------------------|
 | `GET /api/entries`                  | `200` med alla veckor som har en anteckning, nyast först       |
-| `GET /api/entries/{år}/{vecka}`     | `200` med anteckningen, `404` om veckan saknar anteckning      |
+| `GET /api/entries/{år}/{vecka}`     | `200` med anteckningen, `204` utan kropp om veckan saknar anteckning |
 | `PUT /api/entries/{år}/{vecka}`     | `200` med den sparade anteckningen, se nedan                   |
 
 `{år}` och `{vecka}` är ISO-veckoår och veckonummer. En vecka som inte finns (t.ex. vecka 53

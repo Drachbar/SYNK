@@ -58,9 +58,12 @@ public class EntryController {
                 .toList();
     }
 
+    /** 204 when the week has no note yet: an empty week is normal, not an error. */
     @GetMapping("/{isoYear}/{isoWeek}")
     public ResponseEntity<EntryResponse> get(@PathVariable final int isoYear, @PathVariable final int isoWeek) {
-        return ResponseEntity.of(service.find(isoYear, isoWeek).map(EntryResponse::of));
+        return service.find(isoYear, isoWeek)
+                .map(entry -> ResponseEntity.ok(EntryResponse.of(entry)))
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @PutMapping("/{isoYear}/{isoWeek}")

@@ -8,7 +8,7 @@ export const load: PageLoad = async ({ params, fetch }) => {
 	if (!isValidWeek(week)) error(404, 'Den veckan finns inte');
 
 	const res = await fetch(`/api/entries/${week.year}/${week.week}`);
-	if (res.status === 404) return { week, entry: null };
+	if (res.status === 204) return { week, entry: null }; // veckan har ingen anteckning än
 	if (!res.ok) error(res.status, 'Kunde inte hämta anteckningen');
 	return { week, entry: (await res.json()) as EntryResponse };
 };
