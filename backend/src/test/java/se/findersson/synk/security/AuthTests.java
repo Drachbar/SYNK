@@ -26,12 +26,11 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import se.findersson.synk.config.WebSecurityConfig;
 import se.findersson.synk.controller.AuthController;
-import se.findersson.synk.controller.TestController;
 import se.findersson.synk.user.AppUser;
 import se.findersson.synk.user.AppUserRepository;
 
 /** Runs against the web layer only, with the user table mocked, so no database is needed. */
-@WebMvcTest(controllers = {AuthController.class, TestController.class})
+@WebMvcTest(controllers = AuthController.class)
 @Import({WebSecurityConfig.class, AppUserDetailsService.class})
 class AuthTests {
 
@@ -52,7 +51,7 @@ class AuthTests {
 
     @Test
     void apiRequiresLogin() throws Exception {
-        mvc.perform(get("/api/test")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/entries")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/auth/me")).andExpect(status().isUnauthorized());
     }
 

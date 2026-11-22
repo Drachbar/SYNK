@@ -160,3 +160,42 @@ databaseChangeLog:
       rollback:
         - sql:
             sql: DROP TABLE SPRING_SESSION_ATTRIBUTES; DROP TABLE SPRING_SESSION;
+
+  - changeSet:
+      id: 005
+      author: Mattias Andersson
+      comment: Veckoanteckningen blir gemensam - en rad per vecka i stället för per person och vecka
+      changes:
+        - dropUniqueConstraint:
+            tableName: entry
+            constraintName: uq_entry_author_week
+        - dropForeignKeyConstraint:
+            baseTableName: entry
+            constraintName: fk_entry_author
+        - dropColumn:
+            tableName: entry
+            columnName: author_id
+
+        - addColumn:
+            tableName: entry
+            columns:
+              - column:
+                  name: updated_by_id
+                  type: UUID
+                  remarks: Användaren som senast sparade anteckningen
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_entry_updated_by
+                    references: app_user(id)
+              - column:
+                  name: version
+                  type: INT
+                  defaultValueNumeric: 0
+                  remarks: Ökas vid varje sparning, för att upptäcka samtidiga ändringar
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            tableName: entry
+            columnNames: iso_year, iso_week
+            constraintName: uq_entry_week

@@ -1,0 +1,18 @@
+# systemd-tjänst för SYNK på app-VM:en. Se docs/drift.md.
+[Unit]
+Description=SYNK
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=synk
+Group=synk
+WorkingDirectory=/opt/synk
+EnvironmentFile=/etc/synk/synk.env
+ExecStart=/usr/bin/java -Xmx256m -jar /opt/synk/synk.jar
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -8,7 +8,7 @@ Hibernate kör med `ddl-auto=validate`, så det är alltid Liquibase som ändrar
 
 ```mermaid
 erDiagram
-    app_user ||--o{ entry : "skriver"
+    app_user ||--o{ entry : "sparade senast"
 
     app_user {
         uuid id PK
@@ -20,17 +20,18 @@ erDiagram
 
     entry {
         uuid id PK
-        uuid author_id FK
         int iso_year
         int iso_week
         int schema_version
         jsonb content
+        uuid updated_by_id FK
+        int version
         timestamptz created_at
         timestamptz updated_at
     }
 ```
 
-En användare kan ha många anteckningar, men högst en per vecka.
+Det finns en gemensam anteckning per vecka, som alla användare läser och skriver i.
 
 ## `app_user`
 
@@ -53,24 +54,25 @@ applikationskoden. De har ingen främmande nyckel till `app_user`; kopplingen ti
 
 ## `entry`
 
-En veckoanteckning: en persons tankar om en viss vecka.
+En veckoanteckning: det gemensamma synk-mötets anteckningar för en viss vecka.
 
 | Kolumn           | Typ         | Betydelse                                                                                   |
 |------------------|-------------|---------------------------------------------------------------------------------------------|
 | `id`             | uuid        | Primärnyckel, genereras av databasen.                                                       |
-| `author_id`      | uuid        | Vem som skrivit anteckningen. Främmande nyckel till `app_user.id`.                          |
 | `iso_year`       | int         | Veckoår enligt ISO 8601. Se [Veckor](#veckor).                                              |
 | `iso_week`       | int         | Veckonummer enligt ISO 8601, 1–53.                                                          |
 | `schema_version` | int         | Vilken version av formatet i `content` som raden är sparad med. Se [Versioner](#versioner). |
 | `content`        | jsonb       | Själva formulärsvaren. Se [Innehållet i `content`](#innehållet-i-content).                  |
+| `updated_by_id`  | uuid        | Vem som sparade senast. Främmande nyckel till `app_user.id`.                                |
+| `version`        | int         | Börjar på 0 och ökas vid varje sparning. Används för att upptäcka att två personer sparat samtidigt, se [api.md](api.md#spara). |
 | `created_at`     | timestamptz | När anteckningen skapades.                                                                  |
 | `updated_at`     | timestamptz | När anteckningen senast ändrades. Sätts av applikationen, inte av en trigger.               |
 
 Regler som databasen upprätthåller:
 
-- `uq_entry_author_week` – en användare kan bara ha en anteckning per (`iso_year`, `iso_week`).
-- `fk_entry_author` – `author_id` måste peka på en befintlig användare, och en användare som har
-  anteckningar kan inte tas bort.
+- `uq_entry_week` – det finns bara en anteckning per (`iso_year`, `iso_week`).
+- `fk_entry_updated_by` – `updated_by_id` måste peka på en befintlig användare, och en användare
+  som senast sparat någon anteckning kan inte tas bort.
 - `ck_entry_iso_week` – `iso_week` måste ligga mellan 1 och 53.
 
 ### Veckor
