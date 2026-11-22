@@ -19,7 +19,7 @@ public class AppUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(final String username) {
-        return users.findByName(username)
+        return users.findByNameIgnoringCase(username.strip())
                 .map(AuthenticatedUser::new)
                 .orElseThrow(() -> new UsernameNotFoundException("No such user"));
     }

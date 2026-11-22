@@ -53,7 +53,7 @@ PGPASSWORD=$db_password psql -X -q -v ON_ERROR_STOP=1 \
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 INSERT INTO app_user (name, password_hash)
 VALUES (:'name', crypt(:'password', gen_salt('bf', 10)))
-ON CONFLICT (name) DO UPDATE
+ON CONFLICT ((lower(name))) DO UPDATE
     SET password_hash = EXCLUDED.password_hash, updated_at = now()
 RETURNING CASE WHEN xmax = 0 THEN 'Skapade användaren ' ELSE 'Bytte lösenord för ' END || name AS resultat;
 SQL

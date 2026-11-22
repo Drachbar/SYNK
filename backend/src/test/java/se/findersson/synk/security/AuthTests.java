@@ -45,7 +45,7 @@ class AuthTests {
 
     @BeforeEach
     void setUp() {
-        when(users.findByName("mattias"))
+        when(users.findByNameIgnoringCase("mattias"))
                 .thenReturn(Optional.of(new AppUser("mattias", passwordEncoder.encode("hemligt"))));
     }
 
@@ -91,6 +91,12 @@ class AuthTests {
         mvc.perform(post("/api/auth/logout").session(session)).andExpect(status().isForbidden());
         mvc.perform(withCsrf(post("/api/auth/logout").session(session))).andExpect(status().isNoContent());
         assertThat(session.isInvalid()).isTrue();
+    }
+
+    @Test
+    void usernameIsTrimmedBeforeLookup() throws Exception {
+        // The case-insensitive match itself happens in the database query, see AppUserTests.
+        mvc.perform(withCsrf(login(" mattias ", "hemligt"))).andExpect(status().isNoContent());
     }
 
     @Test

@@ -40,7 +40,7 @@ En person som kan logga in.
 | Kolumn          | Typ          | Betydelse                                     |
 |-----------------|--------------|-----------------------------------------------|
 | `id`            | uuid         | Primärnyckel, genereras av databasen.         |
-| `name`          | varchar(255) | Användarens namn. Används som användarnamn vid inloggning och är unikt (`uq_app_user_name`). |
+| `name`          | varchar(255) | Användarens namn, så som det visas. Används som användarnamn vid inloggning, utan hänsyn till skiftläge, och är unikt oavsett skiftläge (`uq_app_user_name_lower`, ett unikt index på `lower(name)`). |
 | `password_hash` | varchar(255) | BCrypt-hash av lösenordet, aldrig klartext.   |
 | `created_at`    | timestamptz  | När raden skapades.                           |
 | `updated_at`    | timestamptz  | När raden senast ändrades.                    |

@@ -19,7 +19,8 @@ Konfigurationen finns i
 | `POST /api/auth/logout` | –                                                                        | `204`                                        |
 | `GET /api/auth/me`      | –                                                                        | `200` med `{ "id", "name" }`, `401` om utloggad |
 
-`username` är användarens `name` i `app_user`.
+`username` är användarens `name` i `app_user`. Skiftläge spelar ingen roll (`Mattias` och
+`mattias` är samma användare), och mellanslag före och efter tas bort.
 
 Sessionen identifieras av kakan `SESSION` (HttpOnly, SameSite=Lax), som webbläsaren skickar
 med automatiskt. Den gäller i 30 dagar utan aktivitet (`spring.session.timeout`), och kakan

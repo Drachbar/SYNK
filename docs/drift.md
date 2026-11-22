@@ -96,7 +96,7 @@ efter att appen har startat en gång (så att tabellerna finns).
 
 Enklast är skriptet [`scripts/create-user.sh`](../scripts/create-user.sh). Det frågar efter
 databasens adress, användare och lösenord, och sedan efter användarnamn och lösenord i SYNK.
-Finns användaren redan byts lösenordet. Det kräver `psql` (`sudo apt install postgresql-client`)
+Finns användaren redan (oavsett skiftläge) byts lösenordet. Det kräver `psql` (`sudo apt install postgresql-client`)
 och ska köras från en maskin som får ansluta till databasen enligt `pg_hba.conf`, t.ex.
 app-VM:en:
 
