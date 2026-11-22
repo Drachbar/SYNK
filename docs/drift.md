@@ -127,6 +127,13 @@ antalet inloggningsförsök per IP.
 
 ## Uppdatera
 
+Kör [`scripts/deploy.sh`](../scripts/deploy.sh) på din egen dator. Det bygger (med tester),
+kopierar upp jar-filen, startar om tjänsten och väntar tills appen svarar. Standardvärden är
+ssh-namnet `ubuntu_general`; ange ett annat som argument eller med `SYNK_DEPLOY_HOST`.
+`--skip-tests` hoppar över testerna.
+
+Samma sak för hand:
+
 ```sh
 ./mvnw -DskipTests package
 scp backend/target/synk-backend-0.0.1-SNAPSHOT.jar app-vm:/tmp/synk.jar
