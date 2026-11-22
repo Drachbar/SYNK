@@ -217,3 +217,87 @@ databaseChangeLog:
             tableName: app_user
             columnNames: name
             constraintName: uq_app_user_name
+
+  - changeSet:
+      id: 007
+      author: Mattias Andersson
+      comment: Formulären flyttar från koden till databasen och versioneras
+      changes:
+        - createTable:
+            tableName: form_version
+            remarks: En version av veckoformuläret. Ändras aldrig; en ändring blir en ny version.
+            columns:
+              - column:
+                  name: version
+                  type: INT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: definition
+                  type: JSONB
+                  remarks: Avsnitt och fält, se docs/databas.md
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by_id
+                  type: UUID
+                  remarks: Vem som skapade versionen. Null för versionerna som följde med appen.
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_form_version_created_by
+                    references: app_user(id)
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+
+        # Version 1 är formuläret som låg i koden (fields.ts). Version 2 bygger på det första synk-mötet.
+        - sql:
+            sql: |
+              INSERT INTO form_version (version, definition) VALUES
+              (1, '{"sections": [
+                {"title": "Summering", "fields": [{"id": "summary", "type": "textarea", "label": ""}]},
+                {"title": "Yrkanden/Yttranden", "fields": [{"id": "statements", "type": "textarea", "label": ""}]},
+                {"title": "Nästa vecka", "fields": [{"id": "next_week", "type": "textarea", "label": ""}]},
+                {"title": "Käk", "fields": [{"id": "meals", "type": "textarea", "label": ""}]}
+              ]}'),
+              (2, '{"sections": [
+                {"title": "Summering", "fields": [
+                  {"id": "week_feeling", "type": "perPerson", "label": "Hur har veckan varit?"},
+                  {"id": "highlight", "type": "perPerson", "label": "Veckans höjdpunkt"},
+                  {"id": "lowlight", "type": "perPerson", "label": "Veckans bajs"},
+                  {"id": "mood", "type": "perPerson", "label": "Hur mår du?"},
+                  {"id": "last_plan", "type": "checklist", "label": "Förra veckans plan", "carryFrom": "next_week"}
+                ]},
+                {"title": "Yrkanden/Yttranden", "fields": [
+                  {"id": "motions", "type": "perPerson", "label": ""},
+                  {"id": "motions_shared", "type": "textarea", "label": "Gemensamt"}
+                ]},
+                {"title": "Nästa vecka", "fields": [{"id": "next_week", "type": "checklist", "label": ""}]},
+                {"title": "Käk", "fields": [{"id": "menu", "type": "weekdays", "label": ""}]}
+              ]}')
+
+        - renameColumn:
+            tableName: entry
+            oldColumnName: schema_version
+            newColumnName: form_version
+            remarks: Formulärsversionen som anteckningen sparades med
+        - addForeignKeyConstraint:
+            baseTableName: entry
+            baseColumnNames: form_version
+            referencedTableName: form_version
+            referencedColumnNames: version
+            constraintName: fk_entry_form_version
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: entry
+            constraintName: fk_entry_form_version
+        - renameColumn:
+            tableName: entry
+            oldColumnName: form_version
+            newColumnName: schema_version
+        - dropTable:
+            tableName: form_version

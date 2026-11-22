@@ -107,8 +107,51 @@ class EntryTests {
     void saveRequiresCsrfToken() throws Exception {
         mvc.perform(put("/api/entries/2900/47").with(user(anna))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"version\":null,\"schemaVersion\":1,\"content\":{}}"))
+                        .content("{\"version\":null,\"formVersion\":1,\"content\":{}}"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void answersCanBeAnyJson() throws Exception {
+        mvc.perform(put("/api/entries/2900/47").with(user(anna)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"version": null, "formVersion": 2, "content": {
+                                  "next_week": [{"id": "a", "text": "Klippa sig", "done": true}],
+                                  "menu": {"mon": "Tacos"}
+                                }}"""))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/api/entries/2900/47").with(user(bertil)))
+                .andExpect(jsonPath("$.formVersion").value(2))
+                .andExpect(jsonPath("$.content.next_week[0].done").value(true))
+                .andExpect(jsonPath("$.content.menu.mon").value("Tacos"));
+    }
+
+    @Test
+    void answersMustBelongToTheForm() throws Exception {
+        // summary is in version 1 but not in version 2.
+        mvc.perform(put("/api/entries/2900/47").with(user(anna)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\":null,\"formVersion\":2,\"content\":{\"summary\":\"x\"}}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(put("/api/entries/2900/47").with(user(anna)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\":null,\"formVersion\":99999,\"content\":{}}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void previousIsTheLatestEarlierNote() throws Exception {
+        mvc.perform(save(anna, 2900, 50, "null", "v50")).andExpect(status().isOk());
+        mvc.perform(save(anna, 2901, 2, "null", "v2")).andExpect(status().isOk());
+
+        // Across the turn of the year, and skipping weeks without notes.
+        mvc.perform(get("/api/entries/2901/10/previous").with(user(anna)))
+                .andExpect(jsonPath("$.isoWeek").value(2));
+        mvc.perform(get("/api/entries/2901/2/previous").with(user(anna)))
+                .andExpect(jsonPath("$.isoYear").value(2900))
+                .andExpect(jsonPath("$.isoWeek").value(50));
     }
 
     @Test
@@ -125,7 +168,7 @@ class EntryTests {
         return put("/api/entries/" + year + "/" + week)
                 .with(user(by)).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"version\":" + version + ",\"schemaVersion\":1,\"content\":{\"summary\":\"" + summary + "\"}}");
+                .content("{\"version\":" + version + ",\"formVersion\":1,\"content\":{\"summary\":\"" + summary + "\"}}");
     }
 
 }

@@ -1,14 +1,14 @@
 // Anrop mot backend. Inloggning och CSRF beskrivs i docs/inloggning.md, resten i docs/api.md.
 
-import type { EntryContent } from './entry/fields';
+import type { Content } from './form/form';
 
 export type Me = { id: string; name: string };
 
 export type EntryResponse = {
 	isoYear: number;
 	isoWeek: number;
-	schemaVersion: number;
-	content: EntryContent;
+	formVersion: number;
+	content: Content;
 	version: number;
 	updatedAt: string;
 	updatedBy: string;

@@ -7,9 +7,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import se.findersson.synk.form.FormDefinition;
+import se.findersson.synk.form.FormService;
 import se.findersson.synk.user.AppUserRepository;
 
 @Service
@@ -25,18 +28,32 @@ public class EntryService {
         private static final long serialVersionUID = 1L;
     }
 
+    /** The form version does not exist, or the content has answers to fields that are not in it. */
+    public static class InvalidContentException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+    }
+
     private final EntryRepository entries;
     private final AppUserRepository users;
+    private final FormService forms;
 
-    public EntryService(final EntryRepository entries, final AppUserRepository users) {
+    public EntryService(final EntryRepository entries, final AppUserRepository users, final FormService forms) {
         this.entries = entries;
         this.users = users;
+        this.forms = forms;
     }
 
     @Transactional(readOnly = true)
     public Optional<Entry> find(final int isoYear, final int isoWeek) {
         requireValidWeek(isoYear, isoWeek);
         return entries.findByIsoYearAndIsoWeek(isoYear, isoWeek);
+    }
+
+    /** The latest note before the given week, which need not be the week right before. */
+    @Transactional(readOnly = true)
+    public Optional<Entry> findPrevious(final int isoYear, final int isoWeek) {
+        requireValidWeek(isoYear, isoWeek);
+        return entries.findBefore(isoYear, isoWeek, Limit.of(1)).stream().findFirst();
     }
 
     /**
@@ -48,15 +65,20 @@ public class EntryService {
      */
     @Transactional
     public Entry save(final int isoYear, final int isoWeek, final Integer expectedVersion,
-            final int schemaVersion, final Map<String, String> content, final UUID userId) {
+            final int formVersion, final Map<String, Object> content, final UUID userId) {
         requireValidWeek(isoYear, isoWeek);
+        final FormDefinition form = forms.find(formVersion)
+                .orElseThrow(InvalidContentException::new).getDefinition();
+        if (!content.keySet().stream().allMatch(form::hasField)) {
+            throw new InvalidContentException();
+        }
         final Optional<Entry> existing = entries.findByIsoYearAndIsoWeek(isoYear, isoWeek);
         final Integer currentVersion = existing.map(Entry::getVersion).orElse(null);
         if (!Objects.equals(currentVersion, expectedVersion)) {
             throw new ConflictException();
         }
         final Entry entry = existing.orElseGet(() -> new Entry(isoYear, isoWeek));
-        entry.update(schemaVersion, content, users.findById(userId).orElseThrow());
+        entry.update(formVersion, content, users.findById(userId).orElseThrow());
         // Flush so that a concurrent save (version or unique constraint) fails here, inside the transaction.
         return entries.saveAndFlush(entry);
     }

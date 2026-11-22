@@ -30,17 +30,17 @@ public class EntryController {
 
     public record EntrySummary(int isoYear, int isoWeek, Instant updatedAt, String updatedBy) {}
 
-    public record EntryResponse(int isoYear, int isoWeek, int schemaVersion, Map<String, String> content,
+    public record EntryResponse(int isoYear, int isoWeek, int formVersion, Map<String, Object> content,
             int version, Instant updatedAt, String updatedBy) {
 
         static EntryResponse of(final Entry entry) {
-            return new EntryResponse(entry.getIsoYear(), entry.getIsoWeek(), entry.getSchemaVersion(),
+            return new EntryResponse(entry.getIsoYear(), entry.getIsoWeek(), entry.getFormVersion(),
                     entry.getContent(), entry.getVersion(), entry.getUpdatedAt(), entry.getUpdatedBy().getName());
         }
     }
 
     /** {@code version} is the version the edit is based on, or null when there was no note yet. */
-    public record SaveRequest(Integer version, int schemaVersion, Map<String, String> content) {}
+    public record SaveRequest(Integer version, Integer formVersion, Map<String, Object> content) {}
 
     private final EntryService service;
     private final EntryRepository entries;
@@ -66,13 +66,21 @@ public class EntryController {
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
+    /** The latest note before the week (not necessarily the week right before), or 204 if there is none. */
+    @GetMapping("/{isoYear}/{isoWeek}/previous")
+    public ResponseEntity<EntryResponse> previous(@PathVariable final int isoYear, @PathVariable final int isoWeek) {
+        return service.findPrevious(isoYear, isoWeek)
+                .map(entry -> ResponseEntity.ok(EntryResponse.of(entry)))
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
     @PutMapping("/{isoYear}/{isoWeek}")
     public EntryResponse save(@PathVariable final int isoYear, @PathVariable final int isoWeek,
             @RequestBody final SaveRequest request, @AuthenticationPrincipal final AuthenticatedUser user) {
-        if (request.content() == null) {
+        if (request.content() == null || request.formVersion() == null) {
             throw new BadRequestException();
         }
-        return EntryResponse.of(service.save(isoYear, isoWeek, request.version(), request.schemaVersion(),
+        return EntryResponse.of(service.save(isoYear, isoWeek, request.version(), request.formVersion(),
                 request.content(), user.getId()));
     }
 
@@ -80,7 +88,8 @@ public class EntryController {
         private static final long serialVersionUID = 1L;
     }
 
-    @ExceptionHandler({EntryService.InvalidWeekException.class, BadRequestException.class})
+    @ExceptionHandler({EntryService.InvalidWeekException.class, EntryService.InvalidContentException.class,
+            BadRequestException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     void badRequest() {
     }

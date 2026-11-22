@@ -39,7 +39,13 @@
 
 <!-- Ny komponent per vecka och per sparad version, så att formuläret alltid börjar från det som hämtats. -->
 {#key `${data.week.year}-${data.week.week}-${data.entry?.version}`}
-	<EntryForm week={data.week} entry={data.entry} />
+	<EntryForm
+		week={data.week}
+		entry={data.entry}
+		form={data.form}
+		users={data.users}
+		previous={data.previous}
+	/>
 {/key}
 
 <style>

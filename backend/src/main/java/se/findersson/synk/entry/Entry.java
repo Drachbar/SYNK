@@ -22,7 +22,7 @@ import se.findersson.synk.user.AppUser;
 
 /**
  * The shared note for one ISO week. The answers live in {@code content}, keyed by the
- * field ids in frontend/src/lib/entry/fields.ts. See docs/databas.md.
+ * field ids of the note's form version. See docs/databas.md.
  */
 @Entity
 public class Entry {
@@ -35,10 +35,12 @@ public class Entry {
 
     private int isoWeek;
 
-    private int schemaVersion;
+    /** The form_version the note was saved with. */
+    private int formVersion;
 
+    /** Field id to answer; the answer's JSON shape depends on the field type. */
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, String> content = new HashMap<>();
+    private Map<String, Object> content = new HashMap<>();
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "updated_by_id")
@@ -62,8 +64,8 @@ public class Entry {
         this.isoWeek = isoWeek;
     }
 
-    public void update(final int schemaVersion, final Map<String, String> content, final AppUser by) {
-        this.schemaVersion = schemaVersion;
+    public void update(final int formVersion, final Map<String, Object> content, final AppUser by) {
+        this.formVersion = formVersion;
         this.content = new HashMap<>(content);
         this.updatedBy = by;
         this.updatedAt = Instant.now();
@@ -81,11 +83,11 @@ public class Entry {
         return isoWeek;
     }
 
-    public int getSchemaVersion() {
-        return schemaVersion;
+    public int getFormVersion() {
+        return formVersion;
     }
 
-    public Map<String, String> getContent() {
+    public Map<String, Object> getContent() {
         return content;
     }
 
